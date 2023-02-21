@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { createResolver } from '../index';
+import { createResolver } from 'jsonapi-resolvers';
 import { data, fetchers } from './simple.data';
 
 describe('jsonapi-resolvers/simple', () => {

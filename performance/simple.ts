@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto';
 import { monotonicFactory } from 'ulid';
 
-import { createResolver } from '../index';
+import { createResolver } from 'jsonapi-resolvers';
 import type { Profiler } from './runner';
 
 export async function run(profiler: Profiler, { postsCount, usersCount }: { postsCount: number, usersCount: number }) {
