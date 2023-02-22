@@ -73,7 +73,62 @@ Argument | Type | Description
 
 ## Usage
 
-### Selecting fields
+### Inclusion of Related Resources
+
+You can (recursively) resolve included entries by specifying the related resources in your `resolve` call.
+
+```js
+const resolve = createResolver({
+  posts(ids) {
+    // Fetch posts by ID in the JSONAPI format
+    return [
+      {
+        type: 'posts',
+        id: '1234',
+        relationships: {
+          // The author relationship is defined here
+          // when you return the resolved posts
+          author: { data: { type: 'users', id: 'abcd' } },
+        },
+      }
+    ];
+  },
+  users(ids) {
+    // Fetch users by ID in the JSONAPI format
+    // Only when `author` is requested as an `include`d property
+  },
+});
+
+const { data } = await resolve('posts', '1234', {
+  include: ['author'],
+});
+// { data: { type: 'posts', id: '1234', ... },
+//   included: [ { type: 'users', id: 'abcd' } ]}
+```
+
+### Selecting fields
+
+Pass a dict/list of fields to [`resolve`](#resolvetype-id-opts) for each entry type, which will be passed to each resolver function. You can then select/pick the exact fields you need to serve in your API response.
+
+```js
+const resolve = createResolver({
+  posts(ids, { fields }) {
+    // Fetch posts by ID in the JSONAPI format
+    // Where fields is the array of fields for this type
+  },
+});
+
+const { data } = await resolve('posts', '1234', {
+  fields: {
+    posts: ['title', 'excerpt'],
+    users: ['name', 'email'],
+  },
+});
+
+// And in your posts-by-id fetchers
+// ids = ['1234']
+// fields = ['title', 'excerpt']
+```
 
 ### Rewriting `links`
 
