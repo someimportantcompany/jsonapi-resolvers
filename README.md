@@ -64,12 +64,38 @@ Argument | Type | Description
 
 ### `resolve(type, id, opts?)`
 
+Resolve one or more entries of a type by calling the fetcher with an ID / list of IDs.
+
 Argument | Type | Description
 ---- | ---- | ----
 `type` | `string` | (**Required**) The entry type you wish to resolve.
 `id`/`ids` | `string`/`string[]` | (**Required**) The entry ID or IDs you wish to resolve.
 `opts?.include` | `string[]` | An array of relationships you wish to expand
 `opts?.fields` | `Record<string, string[]>` | A list of fields you'd like to return for each type, see [selecting fields](#selecting-fields).
+`opts?.links?.baseUrl` | `string` | If set, if `links` are included in the resolver responses they will be prepended by this `baseUrl` value. See [Rewriting `links`](#rewriting-links).
+
+- If you pass `opts.include`, [`resolve.included`](#resolveincludeddata-opts) will be called on your results automatically.
+- If you pass `opts.links` to either [`createResolver`](#createresolverfetchers-opts--resolve) or this function, `resolve.links` will be called automatically.
+
+### `resolve.included(data, opts)`
+
+Given this entry or list of entries, fetch the requested included data.
+
+Argument | Type | Description
+---- | ---- | ----
+`data` | `JsonApiResource`/`JsonApiResource[]` | (**Required**) The entry or list of entries to iterate over.
+`opts?.include` | `string[]` | (**Required**) An array of relationships you wish to expand
+`opts?.fields` | `Record<string, string[]>` | A list of fields you'd like to return for each type, see [selecting fields](#selecting-fields).
+`opts?.links?.baseUrl` | `string` | If set, if `links` are included in the included responses they will be prepended by this `baseUrl` value. See [Rewriting `links`](#rewriting-links).
+
+### `resolve.links(links, opts)`
+
+Given an object of links, rewrite them to fit the current request.
+
+Argument | Type | Description
+---- | ---- | ----
+`links` | `Record<string, JsonApiLink | null>` | (**Required**) An object of links to iterate over.
+`opts?.baseUrl` | `string` | (**Required**) All links will be prepended by this `baseUrl` value. See [Rewriting `links`](#rewriting-links).
 
 ## Usage
 
@@ -90,7 +116,7 @@ const resolve = createResolver({
           // when you return the resolved posts
           author: { data: { type: 'users', id: 'abcd' } },
         },
-      }
+      },
     ];
   },
   users(ids) {
@@ -103,7 +129,22 @@ const { data } = await resolve('posts', '1234', {
   include: ['author'],
 });
 // { data: { type: 'posts', id: '1234', ... },
-//   included: [ { type: 'users', id: 'abcd' } ]}
+//   included: [ { type: 'users', id: 'abcd', ... } ]}
+```
+
+You can also manually fetch a list of included entries, in cases where you have generated or built your primary data by hand & not with `resolve(...)`:
+
+```js
+const data = {
+  type: 'custom.entry',
+  id: 'FOO-BAR',
+  relationships: {
+    author: { data: { type: 'users', id: 'abcd' } },
+  },
+};
+
+const included = await resolve.included(data, { include: ['author'] });
+// [ { type: 'users', id: 'abcd', ... } ]
 ```
 
 ### Selecting fields
@@ -132,7 +173,41 @@ const { data } = await resolve('posts', '1234', {
 
 ### Rewriting `links`
 
+To make working with different hostnames/paths during runtime easier, this library supports rewriting an entry's `links` property. For example, rather than passing core request logic all the way down to your `fetcher`, you can return relative URLs & rewrite the links to absolute URLs:
+
+```js
+const resolve = createResolver({
+  posts(ids) {
+    // Fetch posts by ID in the JSONAPI format
+    return [
+      {
+        type: 'posts',
+        id: '1234',
+        links: {
+          self: '/posts/1234',
+          content: '/posts/1234/content',
+          comments: '/comments?filter[post]=1234',
+        },
+      },
+    ];
+  },
+});
+
+const { data } = await resolve('posts', '1234', {
+  links: {
+    baseUrl: '/api/v1',
+  },
+});
+// { data: {
+//   type: 'posts',
+//   id: '1234'
+//   links: {
+//     self: '/api/v1/posts/1234',
+//     content: '/api/v1/posts/1234/content',
+//     comments: '/api/v1/comments?filter[post]=1234' } }
+```
+
 ## Notes
 
 - For more information on the JSONAPI specification, [please see here](https://jsonapi.org/format/).
-- Questions? Please [open an issue](https://github.com/jdrydn/jsonapi-resolvers/issues).
+- Questions? Please [open an issue](https://github.com/someimportantcompany/jsonapi-resolvers/issues).
