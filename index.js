@@ -123,27 +123,6 @@ function createResolver(fetchers, resolverOpts = undefined) {
     };
   }
 
-  resolve.links = function links(input, opts) {
-    assert(isPlainObject(input), new TypeError('Expected resolve.links links to be an object'));
-    assert(isPlainObject(opts) && typeof opts.baseUrl === 'string',
-      new TypeError('Expected resolve.links opts.baseUrl to be a string'));
-
-    const output = {};
-
-    Object.entries(input).forEach(([key, value]) => {
-      /* istanbul ignore else */
-      if (value && typeof value.href === 'string' && value.href.startsWith('/')) {
-        value.href = `${opts.baseUrl}${value.href}`;
-      } else if (typeof value === 'string' && value.startsWith('/')) {
-        value = `${opts.baseUrl}${value}`;
-      }
-
-      output[key] = value;
-    });
-
-    return output;
-  };
-
   resolve.included = async function included(entries, resolveIncludedOpts) {
     const opts = {
       include: [],
@@ -192,7 +171,8 @@ function createResolver(fetchers, resolverOpts = undefined) {
 
       await promiseAllSettled(Object.entries(lookups).map(async ([nestedType, nestedIds]) => {
         const { data: nestedData, included: nestedIncluded } = await resolve(nestedType, Array.from(nestedIds), {
-          fields: opts.fields,
+          ...resolveIncludedOpts,
+          include: [],
         });
 
         // Append all nested data to our included list
@@ -203,6 +183,27 @@ function createResolver(fetchers, resolverOpts = undefined) {
     } else {
       return undefined;
     }
+  };
+
+  resolve.links = function links(input, opts) {
+    assert(isPlainObject(input), new TypeError('Expected resolve.links links to be an object'));
+    assert(isPlainObject(opts) && typeof opts.baseUrl === 'string',
+      new TypeError('Expected resolve.links opts.baseUrl to be a string'));
+
+    const output = {};
+
+    Object.entries(input).forEach(([key, value]) => {
+      /* istanbul ignore else */
+      if (value && typeof value.href === 'string' && value.href.startsWith('/')) {
+        value.href = `${opts.baseUrl}${value.href}`;
+      } else if (typeof value === 'string' && value.startsWith('/')) {
+        value = `${opts.baseUrl}${value}`;
+      }
+
+      output[key] = value;
+    });
+
+    return output;
   };
 
   return resolve;
