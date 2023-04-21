@@ -40,10 +40,10 @@ async function promiseAllSettled(input) {
   return values;
 }
 
-const profilerNoop = {
-  start: () => null,
-  end: () => null,
-};
+// const profilerNoop = {
+//   start: () => null,
+//   end: () => null,
+// };
 
 /**
  * Create a resolver function from a collection of functions named-by-type.
@@ -54,7 +54,7 @@ function createResolver(fetchers, resolverOpts = undefined) {
 
   const types = Object.keys(fetchers);
   const initOpts = {
-    profiler: profilerNoop,
+    // profiler: profilerNoop,
 
     ...resolverOpts,
 
@@ -72,7 +72,7 @@ function createResolver(fetchers, resolverOpts = undefined) {
   /**
    * Resolve one-or-more entries of a given type.
    */
-  return async function resolve(type, ids, resolveOpts = undefined) {
+  async function resolve(type, ids, resolveOpts = undefined) {
     assert(types.includes(type),
       new TypeError('Expected type to be a valid schema type'), { resolveType: type });
     assert((Array.isArray(ids) && ids.length) || typeof ids === 'string',
@@ -83,7 +83,13 @@ function createResolver(fetchers, resolverOpts = undefined) {
     const opts = {
       include: [],
       fields: {},
+
       ...resolveOpts,
+
+      links: {
+        ...initOpts.links,
+        ...(resolveOpts || {}).links,
+      },
     };
     assert(Array.isArray(opts.include),
       new TypeError('Expected resolve opts.include to be an array'));
@@ -95,72 +101,111 @@ function createResolver(fetchers, resolverOpts = undefined) {
       fields: Array.isArray(opts.fields[type]) ? opts.fields[type] : undefined,
     });
 
-    if (initOpts.links && initOpts.links.baseUrl) {
+    if (opts.links && opts.links.baseUrl) {
       entries = entries.map(entry => {
         /* istanbul ignore else */
         if (entry && entry.links) {
-          Object.entries(entry.links).forEach(([key, value]) => {
-            /* istanbul ignore else */
-            if (value && typeof value.href === 'string' && value.href.startsWith('/')) {
-              entry.links[key].href = `${initOpts.links.baseUrl}${value.href}`;
-            } else if (typeof value === 'string' && value.startsWith('/')) {
-              entry.links[key] = `${initOpts.links.baseUrl}${value}`;
-            }
-          });
+          entry.links = resolve.links(entry.links, opts.links);
         }
 
         return entry;
       });
     }
 
-    let included; // eslint-disable-line init-declarations
-    if (Array.isArray(opts.include) && opts.include.length) {
-      let fetchIncluded = false;
-      included = [];
-
-      const lookups = entries.reduce((lookup, entry) => {
-        /* istanbul ignore else */
-        if (entry && entry.relationships) {
-          opts.include.forEach(relation => {
-            /* istanbul ignore else */
-            if (entry.relationships[relation] && entry.relationships[relation].data) {
-              const { data } = entry.relationships[relation];
-              /* istanbul ignore else */
-              if (Array.isArray(data) && data.length) {
-                data.forEach(row => {
-                  /* istanbul ignore else */
-                  if (row && row.type && row.id && types.includes(row.type)) {
-                    lookup[row.type] = (lookup[row.type] || new Set()).add(row.id);
-                    fetchIncluded = true;
-                  }
-                });
-              } else if (data && data.type && data.id && types.includes(data.type)) {
-                lookup[data.type] = (lookup[data.type] || new Set()).add(data.id);
-                fetchIncluded = true;
-              }
-            }
-          });
-        }
-
-        return lookup;
-      }, {});
-
-      if (fetchIncluded) {
-        await promiseAllSettled(Object.entries(lookups).map(async ([nestedType, nestedIds]) => {
-          const { data: nestedData, included: nestedIncluded } = await resolve(nestedType, Array.from(nestedIds), {
-            fields: opts.fields,
-          });
-          // Append all nested data to our included list
-          included = included.concat(nestedData, nestedIncluded || []);
-        }));
-      }
-    }
+    // eslint-disable-next-line no-nested-ternary
+    const included = (Array.isArray(opts.include) && opts.include.length)
+      ? (entries.length ? (await resolve.included(entries, opts)) : [])
+      : undefined;
 
     return {
       data: Array.isArray(ids) ? entries : entries.shift(),
       ...(Array.isArray(included) ? { included } : undefined),
     };
+  }
+
+  resolve.links = function links(input, opts) {
+    assert(isPlainObject(input), new TypeError('Expected resolve.links links to be an object'));
+    assert(isPlainObject(opts) && typeof opts.baseUrl === 'string',
+      new TypeError('Expected resolve.links opts.baseUrl to be a string'));
+
+    const output = {};
+
+    Object.entries(input).forEach(([key, value]) => {
+      /* istanbul ignore else */
+      if (value && typeof value.href === 'string' && value.href.startsWith('/')) {
+        value.href = `${opts.baseUrl}${value.href}`;
+      } else if (typeof value === 'string' && value.startsWith('/')) {
+        value = `${opts.baseUrl}${value}`;
+      }
+
+      output[key] = value;
+    });
+
+    return output;
   };
+
+  resolve.included = async function included(entries, resolveIncludedOpts) {
+    const opts = {
+      include: [],
+      fields: {},
+
+      ...resolveIncludedOpts,
+    };
+    assert(Array.isArray(entries) || (entries.type && entries.id),
+      new TypeError('Expected resolve.included entries to be an array or a single entry'));
+    assert(Array.isArray(opts.include) && opts.include.length,
+      new TypeError('Expected resolve.included opts.include to be an array of strings'));
+    assert(isPlainObject(opts.fields),
+      new TypeError('Expected resolve.included opts.fields to be an object'));
+
+    let fetchIncluded = false;
+
+    const lookups = (Array.isArray(entries) ? entries : [entries]).reduce((lookup, entry) => {
+      /* istanbul ignore else */
+      if (entry && entry.relationships) {
+        opts.include.forEach(relation => {
+          /* istanbul ignore else */
+          if (entry.relationships[relation] && entry.relationships[relation].data) {
+            const { data } = entry.relationships[relation];
+            /* istanbul ignore else */
+            if (Array.isArray(data) && data.length) {
+              data.forEach(row => {
+                /* istanbul ignore else */
+                if (row && row.type && row.id && types.includes(row.type)) {
+                  lookup[row.type] = (lookup[row.type] || new Set()).add(row.id);
+                  fetchIncluded = true;
+                }
+              });
+            } else if (data && data.type && data.id && types.includes(data.type)) {
+              lookup[data.type] = (lookup[data.type] || new Set()).add(data.id);
+              fetchIncluded = true;
+            }
+          }
+        });
+      }
+
+      return lookup;
+    }, {});
+
+    if (fetchIncluded) {
+      let results = [];
+
+      await promiseAllSettled(Object.entries(lookups).map(async ([nestedType, nestedIds]) => {
+        const { data: nestedData, included: nestedIncluded } = await resolve(nestedType, Array.from(nestedIds), {
+          fields: opts.fields,
+        });
+
+        // Append all nested data to our included list
+        results = results.concat(nestedData, nestedIncluded || []);
+      }));
+
+      return results;
+    } else {
+      return undefined;
+    }
+  };
+
+  return resolve;
 }
 
 module.exports = {

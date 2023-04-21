@@ -1,22 +1,37 @@
-type JsonApiResource = {
+export type JsonApiLink = string | {
+  href: string,
+  title?: string | undefined,
+  meta?: Record<string, unknown> | undefined,
+  describedby?: JsonApiLink | undefined,
+  type?: string | undefined,
+  hreflang?: string | string[] | undefined,
+  rel?: string | undefined,
+};
+
+export type JsonApiResource = {
   type: string,
   id: string,
-  attributes?: Record<string, unknown>,
-  relationships?: Record<string, unknown>,
-  meta?: Record<string, unknown>,
-  links?: Record<string, unknown>,
+  attributes?: Record<string, unknown> | undefined,
+  relationships?: Record<string, unknown> | undefined,
+  meta?: Record<string, unknown> | undefined,
+  links?: Record<string, JsonApiLink | null> | undefined,
 }
 
+export type JsonApiLinkOpts = {
+  baseUrl?: string | undefined,
+};
+
 export type JsonApiFetchResourcesOpts = {
-  include?: string[],
-  fields?: string[],
+  include?: string[] | undefined,
+  fields?: string[] | undefined,
 };
 
 export type JsonApiFetchResourcesFn = (ids: string[], opts: JsonApiFetchResourcesOpts) =>
   JsonApiResource[] | Promise<JsonApiResource[]>;
 
 export type JsonApiResolverOpts = {
-  fields?: Record<string, string[]>,
+  fields?: Record<string, string[]> | undefined,
+  links?: JsonApiLinkOpts | undefined,
 };
 
 /**
@@ -45,10 +60,21 @@ interface resolve {
     Promise<{ data: JsonApiResource[], included: JsonApiResource[] }>,
 }
 
+namespace resolve {
+  export function included(
+    data: JsonApiResource | JsonApiResource[],
+    opts: { include: string[] } & JsonApiResolverOpts,
+  ): Promise<JsonApiResource[] | undefined>
+
+  export function links(
+    // eslint-disable-next-line no-shadow
+    links: NonNullable<JsonApiResource['links']>,
+    opts: JsonApiLinkOpts,
+  ): JsonApiResource['links']
+}
+
 export type JsonApiCreateResolverOpts = {
-  links?: {
-    baseUrl?: string,
-  },
+  links?: JsonApiLinkOpts | undefined,
 };
 
 /**

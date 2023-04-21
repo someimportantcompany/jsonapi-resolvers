@@ -61,7 +61,7 @@ describe('jsonapi-resolvers/simple', () => {
   describe('#mocked', () => {
     it('should pass through includes & fields', async () => {
       const resolve = createResolver({
-        something(ids: string[], opts?: { include?: string[] }) {
+        something(ids: string[], opts: unknown) {
           assert.deepStrictEqual(ids, ['1', '2', '3']);
           assert.deepStrictEqual(opts, {
             include: ['a', 'b', 'c'],

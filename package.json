@@ -8,9 +8,9 @@
     "performance": "ts-node -r tsconfig-paths/register ./performance/runner.ts",
     "test": "nyc mocha"
   },
-  "repository": "https://github.com/jdrydn/jsonapi-resolvers",
-  "bugs": "https://github.com/jdrydn/jsonapi-resolvers/issues",
-  "homepage": "https://github.com/jdrydn/jsonapi-resolvers#readme",
+  "repository": "https://github.com/someimportantcompany/jsonapi-resolvers",
+  "bugs": "https://github.com/someimportantcompany/jsonapi-resolvers/issues",
+  "homepage": "https://github.com/someimportantcompany/jsonapi-resolvers#readme",
   "author": "jdrydn <james@jdrydn.com> (https://jdrydn.com)",
   "license": "MIT",
   "files": [
