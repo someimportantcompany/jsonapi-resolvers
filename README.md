@@ -1,5 +1,9 @@
 # jsonapi-resolvers
 
+[![NPM](https://badge.fury.io/js/jsonapi-resolvers.svg)](https://npm.im/jsonapi-resolvers)
+[![CI](https://github.com/someimportantcompany/jsonapi-resolvers/workflows/CI/badge.svg?branch=master)](https://github.com/someimportantcompany/jsonapi-resolvers/actions?query=branch%3Amaster)
+[![Typescript](https://img.shields.io/badge/TS-TypeScript-%230074c1.svg)](https://www.typescriptlang.org)
+
 Build a resolving function to help you resolve JSON-API entities. With support for selecting specific `fields` & recursively `include`-ing related documents.
 
 ```js
@@ -84,9 +88,9 @@ Given this entry or list of entries, fetch the requested included data.
 Argument | Type | Description
 ---- | ---- | ----
 `data` | `JsonApiResource`/`JsonApiResource[]` | (**Required**) The entry or list of entries to iterate over.
-`opts?.include` | `string[]` | (**Required**) An array of relationships you wish to expand
-`opts?.fields` | `Record<string, string[]>` | A list of fields you'd like to return for each type, see [selecting fields](#selecting-fields).
-`opts?.links?.baseUrl` | `string` | If set, if `links` are included in the included responses they will be prepended by this `baseUrl` value. See [Rewriting `links`](#rewriting-links).
+`opts.include` | `string[]` | (**Required**) An array of relationships you wish to expand
+`opts.fields` | `Record<string, string[]>` | A list of fields you'd like to return for each type, see [selecting fields](#selecting-fields).
+`opts.links?.baseUrl` | `string` | If set, if `links` are included in the included responses they will be prepended by this `baseUrl` value. See [Rewriting `links`](#rewriting-links).
 
 ### `resolve.links(links, opts)`
 
@@ -95,7 +99,7 @@ Given an object of links, rewrite them to fit the current request.
 Argument | Type | Description
 ---- | ---- | ----
 `links` | `Record<string, JsonApiLink | null>` | (**Required**) An object of links to iterate over.
-`opts?.baseUrl` | `string` | (**Required**) All links will be prepended by this `baseUrl` value. See [Rewriting `links`](#rewriting-links).
+`opts.baseUrl` | `string` | (**Required**) All links will be prepended by this `baseUrl` value. See [Rewriting `links`](#rewriting-links).
 
 ## Usage
 
