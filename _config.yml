@@ -1,0 +1,7 @@
+title: jsonapi-resolvers
+description: Resolve JSON-API entities
+baseurl: /jsonapi-resolvers
+repository: someimportantcompany/jsonapi-resolvers
+
+remote_theme: someimportantcompany/jekyll-documentation
+permalink: pretty
