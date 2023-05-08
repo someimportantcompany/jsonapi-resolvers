@@ -58,19 +58,23 @@ interface resolve {
    */
   (type: string, ids: string[], opts: { include: string[] } & JsonApiResolverOpts):
     Promise<{ data: JsonApiResource[], included: JsonApiResource[] }>,
-}
 
-namespace resolve {
-  export function included(
+  /**
+   * Given an entry or a list of entries, fetch the requested included data.
+   */
+  included(
     data: JsonApiResource | JsonApiResource[],
     opts: { include: string[] } & JsonApiResolverOpts,
-  ): Promise<JsonApiResource[] | undefined>
+  ): Promise<JsonApiResource[] | undefined>,
 
-  export function links(
+  /**
+   * Given an object of links, rewrite them to fit the current request.
+   */
+  links(
     // eslint-disable-next-line no-shadow
     links: NonNullable<JsonApiResource['links']>,
     opts: JsonApiLinkOpts,
-  ): JsonApiResource['links']
+  ): JsonApiResource['links'],
 }
 
 export type JsonApiCreateResolverOpts = {
