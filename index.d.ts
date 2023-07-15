@@ -84,16 +84,16 @@ export type JsonApiRoot = ({
   // Either a single resource, an array of resources, or null.
   data?: JsonApiResource | JsonApiResource[] | null | undefined,
   // The members data and errors MUST NOT coexist in the same document.
-  errors: never,
+  errors: void,
   // An array of resource objects that are related to the primary data and/or each other.
   included?: JsonApiResource[] | undefined,
 } | {
   // An array of error objects.
   errors: JsonApiError[],
   // The members data and errors MUST NOT coexist in the same document.
-  data: never,
+  data: void,
   // If a document does not contain a top-level data key, the included member MUST NOT be present either.
-  included: never,
+  included: void,
 }) & {
   // A meta object that contains non-standard meta-information.
   meta?: Record<string, unknown> | undefined,
