@@ -2,7 +2,6 @@
   "name": "jsonapi-resolvers",
   "version": "2.0.0-beta.2",
   "description": "Resolve JSON-API entities",
-  "main": "./index.js",
   "scripts": {
     "lint": "eslint .",
     "performance": "ts-node -r tsconfig-paths/register ./performance/runner.ts",
@@ -13,6 +12,8 @@
   "homepage": "https://github.com/someimportantcompany/jsonapi-resolvers#readme",
   "author": "jdrydn <james@jdrydn.com> (https://jdrydn.com)",
   "license": "MIT",
+  "main": "./index.js",
+  "types": "./index.d.ts",
   "files": [
     "./index.d.ts",
     "./index.js"
