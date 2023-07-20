@@ -1,6 +1,6 @@
 {
   "name": "jsonapi-resolvers",
-  "version": "2.0.0-beta.2",
+  "version": "2.0.0",
   "description": "Resolve JSON-API entities",
   "scripts": {
     "lint": "eslint .",
